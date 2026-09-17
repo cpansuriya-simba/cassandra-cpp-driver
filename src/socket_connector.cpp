@@ -111,7 +111,8 @@ SocketConnector::SocketConnector(const Address& address, const Callback& callbac
     : address_(address)
     , callback_(callback)
     , error_code_(SOCKET_OK)
-    , ssl_error_code_(CASS_OK) {}
+    , ssl_error_code_(CASS_OK)
+    , is_handshake_finished_(false) {}
 
 SocketConnector* SocketConnector::with_settings(const SocketSettings& settings) {
   settings_ = settings;
@@ -224,6 +225,11 @@ void SocketConnector::ssl_handshake() {
 }
 
 void SocketConnector::ssl_handshake_finish() {
+  // Handshake completion can be observed from both the deferred on_write()
+  // and a subsequent on_read() with TLS 1.3; only run this once.
+  if (is_handshake_finished_) return;
+  is_handshake_finished_ = true;
+
   // If the handshake process is done then verify the certificate and finish.
   ssl_session_->verify();
   if (ssl_session_->has_error()) {

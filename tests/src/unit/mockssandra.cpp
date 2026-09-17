@@ -444,23 +444,25 @@ void ClientConnection::on_ssl_read(const char* data, size_t len) {
     }
 
     char buf[SSL_BUF_SIZE];
-    bool data_written = false;
     int num_bytes;
     while ((num_bytes = BIO_read(outgoing_bio_, buf, sizeof(buf))) > 0) {
-      data_written = true;
       internal_write(buf, num_bytes);
     }
 
-    if (is_handshake_done() && data_written) {
-      return; // Handshake is not completed; ingore remaining data
+    if (!is_handshake_done()) {
+      return; // Handshake still isn't complete; wait for more data.
     }
-  } else {
-    char buf[SSL_BUF_SIZE];
-    while ((rc = SSL_read(ssl_, buf, sizeof(buf))) > 0) {
-      on_read(buf, rc);
-    }
-    has_ssl_error(rc);
+    // Handshake just completed. With TLS 1.3 the client's first application
+    // data (e.g. OPTIONS) can arrive in the same read as the final handshake
+    // record, so fall through and drain any decrypted data below instead of
+    // dropping it.
   }
+
+  char buf[SSL_BUF_SIZE];
+  while ((rc = SSL_read(ssl_, buf, sizeof(buf))) > 0) {
+    on_read(buf, rc);
+  }
+  has_ssl_error(rc);
 }
 
 ServerConnection::ServerConnection(const Address& address, const ClientConnectionFactory& factory)
