@@ -60,8 +60,8 @@ void Server::close() {
 }
 
 bool Server::use_ssl(const String& key, const String& cert, const String& ca_cert /*= ""*/,
-                     bool require_client_cert /*= false*/) {
-  return server_connection_->use_ssl(key, cert, ca_cert, require_client_cert);
+                     bool require_client_cert /*= false*/, bool enable_tls_13 /*= false*/) {
+  return server_connection_->use_ssl(key, cert, ca_cert, require_client_cert, enable_tls_13);
 }
 
 Server::ClientConnection::ClientConnection(internal::ServerConnection* server_connection,

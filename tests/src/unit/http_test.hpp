@@ -55,7 +55,7 @@ public:
   datastax::internal::core::SocketSettings use_ssl(const String& cn = HTTP_MOCK_HOSTNAME,
                                                    bool is_server_using_ssl = true);
 
-  void use_ssl(const String& ca_cert, const String& ca_key, const String& cn);
+  void use_ssl(const String& ca_cert, const String& ca_key, const String& cn, bool enable_tls_13 = true);
 
 private:
   datastax::String ca_cert_;

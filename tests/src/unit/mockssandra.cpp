@@ -493,7 +493,8 @@ uv_loop_t* ServerConnection::loop() {
 
 bool ServerConnection::use_ssl(const String& key, const String& cert,
                                const String& ca_cert /*= ""*/,
-                               bool require_client_cert /*= false*/) {
+                               bool require_client_cert /*= false*/,
+                               bool enable_tls_13 /*= true*/) {
   if (ssl_context_) {
     SSL_CTX_free(ssl_context_);
   }
@@ -506,6 +507,18 @@ bool ServerConnection::use_ssl(const String& key, const String& cert,
   SSL_CTX_set_default_passwd_cb_userdata(ssl_context_, (void*)"");
   SSL_CTX_set_default_passwd_cb(ssl_context_, on_password);
   SSL_CTX_set_verify(ssl_context_, SSL_VERIFY_NONE, NULL);
+
+  /* CASSCPP-16
+
+    Default max for TLS negotiation with clients will be TLS 1.3 (in order
+    to maximally test the newest version) but some tests may include behaviours
+    that rely on TLS 1.2 or earlier.
+  */
+  if (enable_tls_13) {
+    SSL_CTX_set_max_proto_version(ssl_context_, TLS1_3_VERSION);
+  } else {
+    SSL_CTX_set_max_proto_version(ssl_context_, TLS1_2_VERSION);
+  }
 
   { // Load server certificate
     Scoped<X509> x509(load_cert(cert));

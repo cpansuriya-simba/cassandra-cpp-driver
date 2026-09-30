@@ -52,12 +52,12 @@ SocketSettings HttpTest::use_ssl(const String& cn, bool is_server_using_ssl /*= 
   return settings;
 }
 
-void HttpTest::use_ssl(const String& ca_key, const String& ca_cert, const String& cn) {
+void HttpTest::use_ssl(const String& ca_key, const String& ca_cert, const String& cn, bool enable_tls_13 /*= false*/) {
 #ifdef HAVE_OPENSSL
   key_ = mockssandra::Ssl::generate_key();
   cert_ = mockssandra::Ssl::generate_cert(key_, cn, ca_cert, ca_key);
   ca_cert_ = ca_cert;
 
-  server_.use_ssl(key_, cert_, ca_cert_, true);
+  server_.use_ssl(key_, cert_, ca_cert_, true, enable_tls_13);
 #endif
 }
